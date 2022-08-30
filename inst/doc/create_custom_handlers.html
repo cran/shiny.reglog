@@ -14,7 +14,19 @@
 
 <title>Creating custom RegLogConnector handlers</title>
 
-<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -24,6 +36,7 @@
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
     </style>
+
 
 
 <style type="text/css">
@@ -125,7 +138,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 
 
@@ -137,11 +330,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<h1 class="title toc-ignore">Creating custom RegLogConnector handlers</h1>
+<h1 class="title toc-ignore">Creating custom RegLogConnector
+handlers</h1>
 
 
 
-<p><em>shiny.reglog</em> package requires user to create <em>dbConnector</em> and <em>mailConnector</em> for the <em>RegLogServer</em> functionality. While creating ShinyApp almost always you want to use one database and one emailing procedure. For all usage beyond <em>RegLogServer</em> defaults, it would be suboptimal to define new connections. That’s why during development I came to the conclusion that these connectors should allow for easy extensions with custom functions.</p>
+<p><em>shiny.reglog</em> package requires user to create
+<em>dbConnector</em> and <em>mailConnector</em> for the
+<em>RegLogServer</em> functionality. While creating ShinyApp almost
+always you want to use one database and one emailing procedure. For all
+usage beyond <em>RegLogServer</em> defaults, it would be suboptimal to
+define new connections. That’s why during development I came to the
+conclusion that these connectors should allow for easy extensions with
+custom functions.</p>
 <p>The scope of this vignette is to describe:</p>
 <ul>
 <li>how the <em>RegLogConnectors</em> operate</li>
@@ -150,20 +351,40 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <div id="reglogconnector-dataflow" class="section level2">
 <h2><em>RegLogConnector</em> dataflow</h2>
-<p>Both <em>dbConnectors</em> (<code>RegLogDBIConnector</code> and <code>RegLogGsheetConnector</code>) and <em>mailConnectors</em> (<code>RegLogEmayiliConnector</code> and <code>RegLogGmailrConnector</code>) inherits from more general class: <code>RegLogConnector</code>. There are three public fields that are key for the whole dataflow:</p>
+<p>Both <em>dbConnectors</em> (<code>RegLogDBIConnector</code> and
+<code>RegLogGsheetConnector</code>) and <em>mailConnectors</em>
+(<code>RegLogEmayiliConnector</code> and
+<code>RegLogGmailrConnector</code>) inherits from more general class:
+<code>RegLogConnector</code>. There are three public fields that are key
+for the whole dataflow:</p>
 <ul>
-<li><code>RegLogConnector$listener()</code> - <em>reactiveVal</em> object that intakes <em>RegLogConnectorMessage</em> object. <em>RegLogConnector</em> listens to any change in the value of this this object and reacts accordingly.</li>
-<li><code>RegLogConnector$handlers</code> - <em>named list</em> of <strong>handler functions</strong>. For every <code>type</code> of received message there should be a specific function appended there. All of them should return another <em>RegLogConnectorMessage</em> object informing about the result of the function.</li>
-<li><code>RegLogConnector$message()</code> - <em>reactiveVal</em> object containing <em>RegLogConnectorMessage</em> that are returned from <strong>handler function</strong>.</li>
+<li><code>RegLogConnector$listener()</code> - <em>reactiveVal</em>
+object that intakes <em>RegLogConnectorMessage</em> object.
+<em>RegLogConnector</em> listens to any change in the value of this this
+object and reacts accordingly.</li>
+<li><code>RegLogConnector$handlers</code> - <em>named list</em> of
+<strong>handler functions</strong>. For every <code>type</code> of
+received message there should be a specific function appended there. All
+of them should return another <em>RegLogConnectorMessage</em> object
+informing about the result of the function.</li>
+<li><code>RegLogConnector$message()</code> - <em>reactiveVal</em> object
+containing <em>RegLogConnectorMessage</em> that are returned from
+<strong>handler function</strong>.</li>
 </ul>
 <div id="reglogconnectormessage-object" class="section level3">
 <h3>RegLogConnectorMessage object</h3>
-<p><code>RegLogConnector</code> object reacts upon receiving some kind of <em>RegLogConnectorMessage</em> object and responds likewise. Its an <code>S3</code> class object that contains four fields:</p>
+<p><code>RegLogConnector</code> object reacts upon receiving some kind
+of <em>RegLogConnectorMessage</em> object and responds likewise. Its an
+<code>S3</code> class object that contains four fields:</p>
 <ul>
 <li><code>time</code>: timestamp on which the message was generated</li>
-<li><code>type</code>: character string declaring handler function of the <em>RegLogConnector</em> that should be called when object receive message.</li>
-<li><code>data</code>: list of objects, usually some kind of input or output of the handler function</li>
-<li><code>logcontent</code>: character string declaring content that should be saved into <em>RegLogConnector</em> logs.</li>
+<li><code>type</code>: character string declaring handler function of
+the <em>RegLogConnector</em> that should be called when object receive
+message.</li>
+<li><code>data</code>: list of objects, usually some kind of input or
+output of the handler function</li>
+<li><code>logcontent</code>: character string declaring content that
+should be saved into <em>RegLogConnector</em> logs.</li>
 </ul>
 <p>You can create message freely using function of the same name:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>message <span class="ot">&lt;-</span> </span>
@@ -175,7 +396,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(message)</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.464&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.050&quot;</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;test&quot;</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 2</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ dataframe:&#39;data.frame&#39;:    32 obs. of  11 variables:</span></span>
@@ -190,22 +411,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..$ am  : num [1:32] 1 1 1 0 0 0 0 0 0 0 ...</span></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..$ gear: num [1:32] 4 4 4 3 3 3 3 4 4 4 ...</span></span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   .. ..$ carb: num [1:32] 4 4 1 1 2 1 4 2 2 4 ...</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ numbers  : num [1:10] 3.91 32.23 23.06 50.43 6.7 ...</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ numbers  : num [1:10] 12.6 24.2 77.2 70.2 99.3 ...</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ logcontent: chr &quot;I contain data.frame and random numbers&quot;</span></span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr &quot;RegLogConnectorMessage&quot;</span></span></code></pre></div>
 </div>
 </div>
 <div id="default-handler-functions-for-dbconnectors" class="section level2">
 <h2>Default handler functions for <em>dbConnectors</em></h2>
-<p>Both <em>RegLogDBIConnector</em> and <em>RegLogGsheetConnector</em> contain the same default handler functions. In this vignette I will focus on the messages that are received by the handler functions and their general usability. To learn about messages produced by these functions, check “RegLogServer object fields and methods” vignette and its “Message” section - as all of these messages are finally exposed in <code>RegLogServer$message()</code> public field.</p>
-<p>All of these functions aren’t exported, as they are used only internally. You can read the documentation for them though with usual syntax of <code>?function</code> in console. Documentation is rendered for information how to react with them by creating <em>RegLogConnectorMessages</em> yourself.</p>
+<p>Both <em>RegLogDBIConnector</em> and <em>RegLogGsheetConnector</em>
+contain the same default handler functions. In this vignette I will
+focus on the messages that are received by the handler functions and
+their general usability. To learn about messages produced by these
+functions, check “RegLogServer object fields and methods” vignette and
+its “Message” section - as all of these messages are finally exposed in
+<code>RegLogServer$message()</code> public field.</p>
+<p>All of these functions aren’t exported, as they are used only
+internally. You can read the documentation for them though with usual
+syntax of <code>?function</code> in console. Documentation is rendered
+for information how to react with them by creating
+<em>RegLogConnectorMessages</em> yourself.</p>
 <div id="handler-for-login-type-message" class="section level3">
 <h3>Handler for <em>login</em> type message</h3>
 <ul>
 <li><em>RegLogDBIConnector</em>: <code>DBI_login_handler</code></li>
-<li><em>RegLogGsheetConnector</em>: <code>gsheet_login_handler</code></li>
+<li><em>RegLogGsheetConnector</em>:
+<code>gsheet_login_handler</code></li>
 </ul>
-<p>These functions are handling querying the database for the specified by the user of the ShinyApp user ID and password and check if there is a match. Message structure:</p>
+<p>These functions are handling querying the database for the specified
+by the user of the ShinyApp user ID and password and check if there is a
+match. Message structure:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>login_message <span class="ot">&lt;-</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;login&quot;</span>,</span>
@@ -214,7 +448,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(login_message)</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.487&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.082&quot;</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;login&quot;</span></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 2</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ username: chr &quot;Whatever&quot;</span></span>
@@ -226,9 +460,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3>Handlers for <em>register</em> type message</h3>
 <ul>
 <li><em>RegLogDBIConnector</em>: <code>DBI_register_handler</code></li>
-<li><em>RegLogGsheetConnector</em>: <code>gsheet_register_handler</code></li>
+<li><em>RegLogGsheetConnector</em>:
+<code>gsheet_register_handler</code></li>
 </ul>
-<p>These functions are handling querying the database and checking if the specified user ID and email for new user aren’t already existing in the database. If there is no conflicts, it will then hash provided password and input new row. Message structure:</p>
+<p>These functions are handling querying the database and checking if
+the specified user ID and email for new user aren’t already existing in
+the database. If there is no conflicts, it will then hash provided
+password and input new row. Message structure:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>register_message <span class="ot">&lt;-</span> </span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;register&quot;</span>,</span>
@@ -238,7 +476,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(register_message)</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.501&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.104&quot;</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;register&quot;</span></span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 3</span></span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ username: chr &quot;IAmNewThere&quot;</span></span>
@@ -251,13 +489,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3>Handlers for <em>credsEdit</em> type message</h3>
 <ul>
 <li><em>RegLogDBIConnector</em>: <code>DBI_credsEdit_handler</code></li>
-<li><em>RegLogGsheetConnector</em>: <code>gsheet_credsEdit_handler</code></li>
+<li><em>RegLogGsheetConnector</em>:
+<code>gsheet_credsEdit_handler</code></li>
 </ul>
-<p>These functions are querying the database to search for the specified username and password. After confirming user identity, it can update the database row for this user with any or all of: new username, new email and new password. Message structure:</p>
+<p>These functions are querying the database to search for the specified
+account ID and verify password. After confirming user identity, it can
+update the database row for this user with any or all of: new username,
+new email and new password. Message structure:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>credsEdit_message <span class="ot">&lt;-</span> </span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;credsEdit&quot;</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">username =</span> <span class="st">&quot;Whatever&quot;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">account_id =</span> <span class="dv">1</span>,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">password =</span> <span class="st">&quot;&amp;f5*MSYj^niDt=V&#39;3.[dyEX.C/&quot;</span>,</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">new_username =</span> <span class="st">&quot;Whenever&quot;</span>,</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">new_email =</span> <span class="st">&quot;edited@email.com&quot;</span>,</span>
@@ -265,10 +507,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(credsEdit_message)</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.514&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.125&quot;</span></span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;credsEdit&quot;</span></span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 5</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ username    : chr &quot;Whatever&quot;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ account_id  : num 1</span></span>
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ password    : chr &quot;&amp;f5*MSYj^niDt=V&#39;3.[dyEX.C/&quot;</span></span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ new_username: chr &quot;Whenever&quot;</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ new_email   : chr &quot;edited@email.com&quot;</span></span>
@@ -279,10 +521,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="handlers-for-resetcode_generate-type-message" class="section level3">
 <h3>Handlers for <em>resetCode_generate</em> type message</h3>
 <ul>
-<li><em>RegLogDBIConnector</em>: <code>DBI_resetPass_generation_handler</code></li>
-<li><em>RegLogGsheetConnector</em>: <code>gsheet_resetPass_generation_handler</code></li>
+<li><em>RegLogDBIConnector</em>:
+<code>DBI_resetPass_generation_handler</code></li>
+<li><em>RegLogGsheetConnector</em>:
+<code>gsheet_resetPass_generation_handler</code></li>
 </ul>
-<p>These functions are querying the database to search for the specified username. After confirming that the specified username exists, it generates and inputs reset code that the user can use to generate new password. Message structure:</p>
+<p>These functions are querying the database to search for the specified
+username. After confirming that the specified username exists, it
+generates and inputs reset code that the user can use to generate new
+password. Message structure:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>resetPass_generate_message <span class="ot">&lt;-</span> </span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;resetPass_generate&quot;</span>,</span>
@@ -290,7 +537,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(resetPass_generate_message)</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.528&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.151&quot;</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;resetPass_generate&quot;</span></span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 1</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ username: chr &quot;Whatever&quot;</span></span>
@@ -300,10 +547,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="handlers-for-resetcode_confirm-type-message" class="section level3">
 <h3>Handlers for <em>resetCode_confirm</em> type message</h3>
 <ul>
-<li><em>RegLogDBIConnector</em>: <code>DBI_resetPass_confirmation_handler</code></li>
-<li><em>RegLogGsheetConnector</em>: <code>gsheet_resetPass_confirmation_handler</code></li>
+<li><em>RegLogDBIConnector</em>:
+<code>DBI_resetPass_confirmation_handler</code></li>
+<li><em>RegLogGsheetConnector</em>:
+<code>gsheet_resetPass_confirmation_handler</code></li>
 </ul>
-<p>These functions are querying the database to search for the specified username and confirming that provided reset code is correct. After confirmation, it marks the reset code as used and updates password for the user. Message structure:</p>
+<p>These functions are querying the database to search for the specified
+username and confirming that provided reset code is correct. After
+confirmation, it marks the reset code as used and updates password for
+the user. Message structure:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>resetPass_confirm_message <span class="ot">&lt;-</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;resetPass_confirm&quot;</span>,</span>
@@ -313,7 +565,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(resetPass_confirm_message)</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.546&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.171&quot;</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;resetPass_confirm&quot;</span></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 3</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ username  : chr &quot;Whatever&quot;</span></span>
@@ -325,13 +577,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="default-handler-function-for-mailconnectors" class="section level2">
 <h2>Default handler function for <em>mailConnectors</em></h2>
-<p>All default handlers for <em>mailConnectors</em> use the same handler functions:</p>
+<p>All default handlers for <em>mailConnectors</em> use the same handler
+functions:</p>
 <ul>
-<li><em>RegLogEmayiliConnector</em>: <code>emayili_reglog_mail_handler</code></li>
-<li><em>RegLogGmailrConnector</em>: <code>gmailr_reglog_mail_handler</code></li>
+<li><em>RegLogEmayiliConnector</em>:
+<code>emayili_reglog_mail_handler</code></li>
+<li><em>RegLogGmailrConnector</em>:
+<code>gmailr_reglog_mail_handler</code></li>
 </ul>
-<p>They send the email to the specified address using subject and html body of the email kept in the <code>mailConnector$mails[[message_type]]</code> list. They also replace all of occurences of <em>?username?</em>, <em>?email?</em>, <em>?app_name?</em>, <em>?app_address?</em> and <em>?reset_code?</em> with respective values received in the <em>RegLogConnectorMessage</em>.</p>
-<p>Mail creation is chosen from the <code>mailConnector$mails</code> public field on the basis of the <code>process</code> <em>RegLogConnectorMessage</em> value.</p>
+<p>They send the email to the specified address using subject and html
+body of the email kept in the
+<code>mailConnector$mails[[message_type]]</code> list. They also replace
+all of occurences of <em>?username?</em>, <em>?email?</em>,
+<em>?app_name?</em>, <em>?app_address?</em> and <em>?reset_code?</em>
+with respective values received in the
+<em>RegLogConnectorMessage</em>.</p>
+<p>Mail creation is chosen from the <code>mailConnector$mails</code>
+public field on the basis of the <code>process</code>
+<em>RegLogConnectorMessage</em> value.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resetPass_mail_message <span class="ot">&lt;-</span> </span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;reglog_mail&quot;</span>,</span>
@@ -344,7 +607,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(resetPass_mail_message)</span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; List of 4</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-03-25 17:46:48.559&quot;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ time      : chr &quot;2022-08-29 22:56:35.192&quot;</span></span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ type      : chr &quot;reglog_mail&quot;</span></span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ data      :List of 6</span></span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ process    : chr &quot;resetPass&quot;</span></span>
@@ -355,12 +618,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   ..$ reset_code : chr &quot;4265417643&quot;</span></span>
 <span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  $ logcontent: NULL</span></span>
 <span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr &quot;RegLogConnectorMessage&quot;</span></span></code></pre></div>
-<p>There are also provided handlers to send custom e-mails to the logged user.</p>
+<p>There are also provided handlers to send custom e-mails to the logged
+user.</p>
 <ul>
-<li><em>RegLogEmayiliConnector</em>: <code>emayili_custom_mail_handler</code></li>
-<li><em>RegLogGmailrConnector</em>: <code>gmailr_custom_mail_handler</code></li>
+<li><em>RegLogEmayiliConnector</em>:
+<code>emayili_custom_mail_handler</code></li>
+<li><em>RegLogGmailrConnector</em>:
+<code>gmailr_custom_mail_handler</code></li>
 </ul>
-<p>They are sending email to the specified address parsing it from provided inside the message <em>subject</em> and <em>body</em>, providing also an option to send an <em>attachment</em>. No additional parsing is done there and <code>process</code> value there is only informative - it is saved into logs and presented in the <code>RegLogServer$mail_message()</code> field.</p>
+<p>They are sending email to the specified address parsing it from
+provided inside the message <em>subject</em> and <em>body</em>,
+providing also an option to send an <em>attachment</em>. No additional
+parsing is done there and <code>process</code> value there is only
+informative - it is saved into logs and presented in the
+<code>RegLogServer$mail_message()</code> field.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>message_to_send <span class="ot">&lt;-</span> <span class="fu">RegLogConnectorMessage</span>(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">&quot;custom_mail&quot;</span>,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">process =</span> <span class="st">&quot;attachment_mail&quot;</span>,</span>
@@ -375,11 +646,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="how-to-create-custom-handler-function" class="section level2">
 <h2>How to create custom <em>handler function</em></h2>
-<p><em>Handler function</em> system of <em>dbConnectors</em> and <em>mailConnectors</em> allows for creating custom logic for communicating with them.</p>
-<p>For example purposes the custom action that will be described in this vignette will be the process of saving and reading from <em>googlesheet</em> based database results of simple, 10-item questionnaire: Rosenberg’s Self-esteem scale.</p>
+<p><em>Handler function</em> system of <em>dbConnectors</em> and
+<em>mailConnectors</em> allows for creating custom logic for
+communicating with them.</p>
+<p>For example purposes the custom action that will be described in this
+vignette will be the process of saving and reading from
+<em>googlesheet</em> based database results of simple, 10-item
+questionnaire: Rosenberg’s Self-esteem scale.</p>
 <div id="setup-the-grounds-to-store-the-data" class="section level3">
 <h3>Setup the grounds to store the data</h3>
-<p>Firstly, we need to create another sheet in the googlesheet that is used by the <em>RegLogGsheetConnector</em> to store our data. Besides the summed score we will also need timestamp and username to read the most recent row for the currently logged user.</p>
+<p>Firstly, we need to create another sheet in the googlesheet that is
+used by the <em>RegLogGsheetConnector</em> to store our data. Besides
+the summed score we will also need timestamp and username to read the
+most recent row for the currently logged user.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create new sheet to the googlesheet</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>googlesheets4<span class="sc">::</span><span class="fu">write_sheet</span>(</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ss =</span> gsheet_ss,</span>
@@ -392,7 +671,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="create-a-handler-for-writing-to-database" class="section level3">
 <h3>Create a handler for writing to database</h3>
-<p>All handler functions need to take as arguments objects <code>self</code>, <code>private</code> and <code>message</code> and return <code>RegLogConnectorMessage</code>.</p>
+<p>All handler functions need to take as arguments objects
+<code>self</code>, <code>private</code> and <code>message</code> and
+return <code>RegLogConnectorMessage</code>.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>write_SES_handler <span class="ot">&lt;-</span> <span class="cf">function</span>(self, private, message) {</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  googlesheets4<span class="sc">::</span><span class="fu">sheet_append</span>(</span>
@@ -416,7 +697,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="create-a-handler-for-reading-from-database" class="section level3">
 <h3>Create a handler for reading from database</h3>
-<p>As we have now the writing handler ready, we should create a handler to retrieve the data in another user session.</p>
+<p>As we have now the writing handler ready, we should create a handler
+to retrieve the data in another user session.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>read_SES_handler <span class="ot">&lt;-</span> <span class="cf">function</span>(self, private, message) {</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># read all results</span></span>
@@ -444,7 +726,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="have-everything-in-motion" class="section level3">
 <h3>Have everything in motion</h3>
-<p>I will present there only code for the server logic, containing all needed elements for appending created <em>custom handlers</em> and sending the <em>RegLogConnectorMessages</em> to both write and read data from new sheet.</p>
+<p>I will present there only code for the server logic, containing all
+needed elements for appending created <em>custom handlers</em> and
+sending the <em>RegLogConnectorMessages</em> to both write and read data
+from new sheet.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create and assign RegLogServer object</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>RegLog <span class="ot">&lt;-</span> RegLogServer<span class="sc">$</span><span class="fu">new</span>(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># create googlesheet connector</span></span>

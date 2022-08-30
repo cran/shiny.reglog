@@ -18,12 +18,6 @@ coverage](https://codecov.io/gh/StatisMike/shiny.reglog/branch/master/graph/badg
 [![R-CMD-check](https://github.com/StatisMike/shiny.reglog/workflows/R-CMD-check/badge.svg)](https://github.com/StatisMike/shiny.reglog/actions)
 <!-- badges: end -->
 
-> These informations are relevant to the current release, which comes
-> with some changes to underlying logic. It isn’t currently submitted to
-> CRAN. If you are looking for information about version present at
-> CRAN, check its
-> <a href="https://github.com/cran/shiny.reglog" target="_blank">mirror</a>
-
 ## 1. Introduction
 
 The user authentication in Shiny applications can be very useful.
@@ -33,9 +27,10 @@ into relational database.
 On the other hand, it may be handy for your App to allow access of
 unregistered users. If you need to secure your ShinyApp, there are
 better alternatives
-(<a href="https://github.com/datastorm-open/shinymanager" target="_blank">shinymanager</a>
-or
-<a href="https://github.com/PaulC91/shinyauthr" target="_blank">shinyauthr</a>)
+(<a href="https://github.com/datastorm-open/shinymanager"
+target="_blank">shinymanager</a> or
+<a href="https://github.com/PaulC91/shinyauthr"
+target="_blank">shinyauthr</a>)
 
 This package contains modules to use in your Shiny application allowing
 you to automatically insert boxes for login, register, credentials edit
@@ -75,7 +70,8 @@ Basic information about *shiny.reglog* is contained within this
 document. There are some more resources to learn about its usage:
 
 -   You can access demonstration shinyApp with showcase mode on
-    <a href="https://statismik.shinyapps.io/shinyreglog_demo/" target="_blank">shinyapps.io</a>
+    <a href="https://statismik.shinyapps.io/shinyreglog_demo/"
+    target="_blank">shinyapps.io</a>
 -   You can run interactive demo in your own RStudio by using
     `RegLogDemo()` function. It will use mocked *mailConnector* by
     default or *RegLogEmayiliConnector* if you provide it arguments
@@ -103,12 +99,12 @@ need to be defined in the *server* code.
 You can install this version of shiny.reglog from GitHub with:
 
 ``` r
-# install version 0.5.0 from GitHub 
-install.packages("devtools")
-devtools::install_github("StatisMike/shiny.reglog")
+# install last stable release from CRAN
+install.packages("shiny.reglog")
 
-# or install old version from CRAN
-# install.packages("shiny.reglog")
+## or development version from GitHub
+install.packages("devtools")
+devtools::install.github("StatisMike/shiny.reglog")
 ```
 
 ## 5. Setting up *dbConnector*
@@ -149,8 +145,8 @@ credentials <- data.frame(
 # create gsheet database with some credentials
 gsheet_id <- gsheet_tables_create(
   user_data = credentials,
-  # as the password was not hashed with `script` before, it need to be
-  # hashed now
+  # as the password was not hashed with `script` before, 
+  # it need to be hashed now
   hash_passwords = T)
 ```
 
@@ -208,8 +204,12 @@ conn <- DBI::dbConnect(
 )
 
 # create database using the connection
-DBI_tables_create(conn = conn,
-                  user_data = credentials)
+DBI_tables_create(
+  conn = conn,
+  user_data = credentials,
+  # as the password was not hashed with `script` before, 
+  # it need to be hashed now
+  hash_passwords = T)
 
 DBI::dbDisconnect(conn)
 ```
@@ -226,6 +226,15 @@ server <- function(input, output, session) {
   
 }
 ```
+
+### 5.3. `MongoDB`-based connector (*RegLogMongoConnector*)
+
+*MongoDB* is very popular NoSQL database with pretty low entry-point.
+Connector is still experimental.
+
+Setup is analogous to other database connectors. For more informations,
+refer to documentation: `?mongo_tables_create()`,
+`?RegLogMongoConnector`
 
 ## 6. Setting up mail connectors
 
@@ -347,11 +356,11 @@ accessed by provided functions containing `tagList`.
 Providing GUI to allow logging in if user is already registered to your
 application.
 
-<img src="man/figures/login_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
-
 ``` r
 RegLog_login_UI()
 ```
+
+<img src="man/figures/login_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
 
 ### 8.2. Register UI
 
@@ -370,11 +379,11 @@ Providing GUI for registering new account.
 After account registration, user will receive confirmation email on
 their password.
 
-<img src="man/figures/register_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
-
 ``` r
 RegLog_register_UI()
 ```
+
+<img src="man/figures/register_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
 
 ### 8.3. Credentials edit UI
 
@@ -390,11 +399,11 @@ Providing GUI for changing credentials.
 -   after user ID and/or e-mail change user will receive confirmation
     e-mail
 
-<img src="man/figures/credsEdit_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
-
 ``` r
 RegLog_credsEdit_UI()
 ```
+
+<img src="man/figures/credsEdit_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
 
 ### 8.4. Reset password UI
 
@@ -407,8 +416,8 @@ Providing GUI for password reset.
 -   same password check for new password is conducted as in register
     procedure
 
-<img src="man/figures/resetPass_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
-
 ``` r
 RegLog_resetPass_UI()
 ```
+
+<img src="man/figures/resetPass_UI.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">

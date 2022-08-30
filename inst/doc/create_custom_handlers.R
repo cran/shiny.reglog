@@ -39,7 +39,7 @@ str(register_message)
 credsEdit_message <- 
   RegLogConnectorMessage(
     type = "credsEdit",
-    username = "Whatever",
+    account_id = 1,
     password = "&f5*MSYj^niDt=V'3.[dyEX.C/",
     new_username = "Whenever",
     new_email = "edited@email.com",
